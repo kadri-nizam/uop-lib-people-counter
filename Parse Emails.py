@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[ ]:
 
 
 from exchangelib import Credentials, Account, Folder, EWSDateTime, EWSTimeZone
 from datetime import date, datetime, timedelta
 from pathlib import Path
+from getpass import getpass
 
 
-# In[2]:
+# In[ ]:
 
 
 def connect_to_owa(email, password):
@@ -71,12 +72,12 @@ def manage_reports_in_inbox(account):
     print('No reports left in Inbox.')
 
 
-# In[23]:
+# In[ ]:
 
 
 # Put your info in between the single quoatation marks
 my_email = r''
-my_pass = r''
+my_pass = getpass()
 
 account = connect_to_owa(my_email, my_pass)
 
