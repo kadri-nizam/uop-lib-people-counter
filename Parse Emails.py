@@ -1,24 +1,26 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
-
-
-from exchangelib import Credentials, Account, Folder, EWSDateTime, EWSTimeZone
+from exchangelib import Credentials, Configuration, Account, Folder, EWSDateTime, EWSTimeZone, DELEGATE
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from getpass import getpass
 
-
-# In[ ]:
-
-
 def connect_to_owa(email, password):
     pac_email = email
     pac_password = password
-
-    credentials = Credentials(pac_email, pac_password)
-    return Account(pac_email, credentials=credentials, autodiscover=True)
+    
+    credentials = Credentials(pac_email, pac_password)    
+    config = Configuration(
+        server='outlook.office365.com', 
+        credentials=credentials)
+    
+    return Account(
+        primary_smtp_address=pac_email, 
+        config=config,
+        autodiscover=False, 
+        access_type=DELEGATE)
+    
     
 def manage_reports_in_inbox(account):
     
@@ -72,11 +74,8 @@ def manage_reports_in_inbox(account):
     print('No reports left in Inbox.')
 
 
-# In[ ]:
-
-
-# Put your info in between the single quoatation marks
-my_email = r''
+# Getting user info and connect to Office365 server
+my_email = input("Please type in your email address:\n")
 my_pass = getpass()
 
 account = connect_to_owa(my_email, my_pass)
