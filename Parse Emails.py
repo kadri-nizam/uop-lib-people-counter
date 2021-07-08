@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from exchangelib import Credentials, Configuration, Account, Folder, EWSDateTime, EWSTimeZone, DELEGATE
+from exchangelib import Credentials, Configuration, Account, Folder, DELEGATE
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from getpass import getpass
@@ -32,9 +32,15 @@ def manage_reports_in_inbox(account):
     
     for email in reports.all():
     
-        # All reports are sent with UTC timezone date (next day). 
-        # Subtract one day since report is for the prvious day
-        email_datetime = email.datetime_sent.date() - timedelta(days = 1)
+        # Report emails are generally sent around midnight local time which means some emails might be sent
+        # on the day of the report while others sent the day after. If the report is sent before 
+        # midnight (00:00:00), the hour value will be more than 20.
+        #
+        # We subtract one day only for emails that are sent after midnight
+        if email.datetime_sent.astimezone(account.default_timezone).time().hour >= 20:
+            email_datetime = email.datetime_sent.date()
+        else:
+            email_datetime = email.datetime_sent.date() - timedelta(days = 1)
 
         month_path = f'./attachments/{email_datetime.year}/{email_datetime.month}'
 
@@ -56,19 +62,13 @@ def manage_reports_in_inbox(account):
                 folder_name = email.sender.name.split(' ')[0]
 
             file_path = Path(f'{month_path}/{folder_name}/{file_name}')
-
-            
-            
-            
-            
+         
             with open(file_path, 'wb') as f:
                 f.write(attachment.content)
-            
 
         email.is_read = True
         email.save()
         email.move(counter_folder)
-        
         print('Successfully parsed report email. Email moved to "Inbox/People Counter"')
         
     print('No reports left in Inbox.')
@@ -76,7 +76,7 @@ def manage_reports_in_inbox(account):
 
 # Getting user info and connect to Office365 server
 my_email = input("Please type in your email address:\n")
-my_pass = getpass()
+my_pass = getpass("Please type in your password:\n")
 
 account = connect_to_owa(my_email, my_pass)
 
@@ -88,4 +88,3 @@ except:
     counter_folder.save()
     
 manage_reports_in_inbox(account)
-
