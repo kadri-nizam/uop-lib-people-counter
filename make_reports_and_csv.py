@@ -60,6 +60,22 @@ report_files = sorted(list(current_dir.glob('**/Daily_Report_*.txt')))
 raw_data = import_data(report_files)
 data = sanitize_data(raw_data)
 
-filename = dt.datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
-filename = filename + '_uop_entrance_data.csv'
-data.to_csv(filename)
+for tt in ['MONTHLY', 'DAILY']:    
+    total_entry = data.resample(tt[0]).sum().sum(1)
+    opening_to_noon = data.between_time('08:00:00', '12:00:00', include_end = False).resample(tt[0]).sum().sum(1)
+    noon_to_nine = data.between_time('12:00:00', '21:00:00', include_end = False).resample(tt[0]).sum().sum(1)
+    nine_to_midnight = data.between_time('21:00:00', '23:00:00', include_end = False).resample(tt[0]).sum().sum(1)
+    midnight_to_closing = data.between_time('00:00:00', '02:00:00').resample(tt[0]).sum().sum(1)
+
+    report = pd.DataFrame()
+    report['TOTAL' + '_' + tt] = total_entry
+    report[tt + '_OPENING_TO_NOON'] = opening_to_noon
+    report[tt + '_NOON_TO_NINE'] = noon_to_nine
+    report[tt + '_NINE_TO_MIDNIGHT'] = nine_to_midnight
+    report[tt + '_MIDNIGHT_TO_CLOSING'] = midnight_to_closing
+
+    # Write to file
+    filetime = dt.datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
+    data.to_csv(filetime + '_' + str.lower(tt) + '_uop_entrance_data.csv')
+    report.to_csv(filetime + '_' + str.lower(tt) + '_report_info.csv')
+    report.describe().to_csv(filetime + '_' + str.lower(tt) + '_report_stats.csv')
